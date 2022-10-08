@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="mdIhLL" name="GOLD3N_EQ" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              cppLanguageStandard="17" pluginFormats="buildAU,buildStandalone,buildVST,buildVST3">
   <MAINGROUP id="Mh0zvu" name="GOLD3N_EQ">
     <GROUP id="{120BEA67-7EAB-D06F-4D49-27B0F3029F2E}" name="Source">
       <FILE id="pkhtPB" name="PluginProcessor.cpp" compile="1" resource="0"

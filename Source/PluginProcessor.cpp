@@ -166,7 +166,8 @@ bool GOLD3N_EQAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* GOLD3N_EQAudioProcessor::createEditor()
 {
-    return new GOLD3N_EQAudioProcessorEditor (*this);
+    //return new GOLD3N_EQAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -181,6 +182,54 @@ void GOLD3N_EQAudioProcessor::setStateInformation (const void* data, int sizeInB
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+GOLD3N_EQAudioProcessor::createParameters() // definicja metody tworzenia parametrow
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "LowCut Frequency", "LowCut Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f), 20.f)); // ID parametru, Nazwa, wartosc min, wartosc max, skok, skewFactor, wartosc default
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>( // filtr dolno przepustowy
+        "HighCut Frequency", "HighCut Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f), 20000.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>( // band w dole
+        "Low Band Frequency", "Low Band Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f), 100.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Low Band Gain", "Low Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Low Band Q", "Low Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+
+
+   layout.add(std::make_unique<juce::AudioParameterFloat>( // band w srednicy
+        "Middle Band Frequency", "Middle Band Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f), 1000.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Middle Band Gain", "Middle Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Middle Band Q", "Middle Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>( // band w gorze
+        "High Band Frequency", "High Band Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f), 5000.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "High Band Gain", "High Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "High Band Q", "High Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+
+    juce::StringArray slopeArray; //lista rozwijana z mozliwoscia wyboru nachylenia zbocza filtrow (db/Oct)
+    for (int i = 0; i < 6; i++)
+    {
+        juce::String str;
+        str << (12 + i*12);
+        str << "db/Oct";
+        slopeArray.add(str);
+    }
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>("LowCut Slope", "LowCut Slope", slopeArray, 0));
+    layout.add(std::make_unique<juce::AudioParameterChoice>("HighCut Slope", "HighCut Slope", slopeArray, 0));
+
+    return layout;
 }
 
 //==============================================================================
