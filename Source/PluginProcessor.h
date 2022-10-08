@@ -57,6 +57,14 @@ public:
     juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameters() }; //przypisanie parametrow
 
 private:
+
+    using Filter = juce::dsp::IIR::Filter<float>;
+
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>; // sygnal mono
+
+    MonoChain leftChain, rightChain; // rozbicie na stereo
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GOLD3N_EQAudioProcessor)
 };
