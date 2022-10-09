@@ -10,6 +10,18 @@
 
 #include <JuceHeader.h>
 
+struct ChainSettings // polaczenie sygnalu z parametrami 
+{
+    float lowCut { 0 }, highCut { 0 };
+    float lowBandF { 0 }, lowBandG { 0 }, lowBandQ { 1.f };
+    float middleBandF { 0 }, middleBandG { 0 }, middleBandQ { 1.f };
+    float highBandF { 0 }, highBandG { 0 }, highBandQ { 1.f };
+    int lowCutSlope { 0 }, highCutSlope { 0 };
+
+};
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& TreeState);
+
 //==============================================================================
 /**
 */
@@ -53,8 +65,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameters(); // metoda tworzenia parametrow
-    juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameters() }; //przypisanie parametrow
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(); // metoda tworzenia parametrow
+    juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameterLayout() }; //przypisanie parametrow
 
 private:
 
@@ -62,9 +74,21 @@ private:
 
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
 
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>; // sygnal mono
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>; // sygnal mono, zdefiniowany lancuch parametrow
 
     MonoChain leftChain, rightChain; // rozbicie na stereo
+
+    enum ChainPositions
+    {
+        LowCut,
+        LowBand,
+        MiddleBand,
+        HighBand,
+        HighCut
+        
+    };
+
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GOLD3N_EQAudioProcessor)
 };

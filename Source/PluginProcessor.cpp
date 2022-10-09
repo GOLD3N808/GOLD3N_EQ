@@ -106,6 +106,27 @@ void GOLD3N_EQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     leftChain.prepare(prepareSpec);
     rightChain.prepare(prepareSpec);
+
+    auto lowChainSettings = getChainSettings(TreeState);
+    auto lowBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        sampleRate, lowChainSettings.lowBandF, lowChainSettings.lowBandQ, juce::Decibels::decibelsToGain(lowChainSettings.lowBandG)); // dodanie wspolczynnikow
+    auto middleChainSettings = getChainSettings(TreeState);
+    auto middleBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        sampleRate, middleChainSettings.middleBandF, middleChainSettings.middleBandQ, juce::Decibels::decibelsToGain(middleChainSettings.middleBandG));
+    auto highChainSettings = getChainSettings(TreeState);
+    auto highBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        sampleRate, highChainSettings.highBandF, highChainSettings.highBandQ, juce::Decibels::decibelsToGain(highChainSettings.highBandG));
+
+    // tu zrobimy jeszcze miejsce
+
+    *leftChain.get<ChainPositions::LowBand>().coefficients = *lowBandCoefficients;
+    *rightChain.get<ChainPositions::LowBand>().coefficients = *lowBandCoefficients;
+
+    *leftChain.get<ChainPositions::MiddleBand>().coefficients = *middleBandCoefficients;
+    *rightChain.get<ChainPositions::MiddleBand>().coefficients = *middleBandCoefficients;
+
+    *leftChain.get<ChainPositions::HighBand>().coefficients = *highBandCoefficients;
+    *rightChain.get<ChainPositions::HighBand>().coefficients = *highBandCoefficients;
 }
 
 void GOLD3N_EQAudioProcessor::releaseResources()
@@ -155,6 +176,27 @@ void GOLD3N_EQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+    auto lowChainSettings = getChainSettings(TreeState);
+    auto lowBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        getSampleRate(), lowChainSettings.lowBandF, lowChainSettings.lowBandQ, juce::Decibels::decibelsToGain(lowChainSettings.lowBandG)); // dodanie wspolczynnikow
+    auto middleChainSettings = getChainSettings(TreeState);
+    auto middleBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+       getSampleRate(), middleChainSettings.middleBandF, middleChainSettings.middleBandQ, juce::Decibels::decibelsToGain(middleChainSettings.middleBandG));
+    auto highChainSettings = getChainSettings(TreeState);
+    auto highBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        getSampleRate(), highChainSettings.highBandF, highChainSettings.highBandQ, juce::Decibels::decibelsToGain(highChainSettings.highBandG));
+
+    // tu zrobimy jeszcze miejsce
+
+    *leftChain.get<ChainPositions::LowBand>().coefficients = *lowBandCoefficients;
+    *rightChain.get<ChainPositions::LowBand>().coefficients = *lowBandCoefficients;
+
+    *leftChain.get<ChainPositions::MiddleBand>().coefficients = *middleBandCoefficients;
+    *rightChain.get<ChainPositions::MiddleBand>().coefficients = *middleBandCoefficients;
+
+    *leftChain.get<ChainPositions::HighBand>().coefficients = *highBandCoefficients;
+    *rightChain.get<ChainPositions::HighBand>().coefficients = *highBandCoefficients;
+
     juce::dsp::AudioBlock<float> block(buffer); // stworzenie buffora dla obu kanalow
 
     auto leftBlock = block.getSingleChannelBlock(0);
@@ -194,8 +236,30 @@ void GOLD3N_EQAudioProcessor::setStateInformation (const void* data, int sizeInB
     // whose contents will have been created by the getStateInformation() call.
 }
 
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& TreeState) // zdefiniowanie metody getChainSettings
+{
+    ChainSettings paramSettings;
+
+    paramSettings.lowCut = TreeState.getRawParameterValue("LowCut Frequency")->load();
+    paramSettings.highCut = TreeState.getRawParameterValue("HighCut Frequency")->load();
+    paramSettings.lowBandF = TreeState.getRawParameterValue("Low Band Frequency")->load();
+    paramSettings.lowBandG = TreeState.getRawParameterValue("Low Band Gain")->load();
+    paramSettings.lowBandQ = TreeState.getRawParameterValue("Low Band Q")->load();
+    paramSettings.middleBandF = TreeState.getRawParameterValue("Middle Band Frequency")->load();
+    paramSettings.middleBandG = TreeState.getRawParameterValue("Middle Band Gain")->load();
+    paramSettings.middleBandQ = TreeState.getRawParameterValue("Middle Band Q")->load();
+    paramSettings.highBandF = TreeState.getRawParameterValue("High Band Frequency")->load();
+    paramSettings.highBandG = TreeState.getRawParameterValue("High Band Gain")->load();
+    paramSettings.highBandQ = TreeState.getRawParameterValue("High Band Q")->load();
+    paramSettings.lowCutSlope = TreeState.getRawParameterValue("LowCut Slope")->load();
+    paramSettings.highCutSlope = TreeState.getRawParameterValue("HighCut Slope")->load();
+
+
+    return paramSettings;
+}
+
 juce::AudioProcessorValueTreeState::ParameterLayout
-GOLD3N_EQAudioProcessor::createParameters() // definicja metody tworzenia parametrow
+GOLD3N_EQAudioProcessor::createParameterLayout() // definicja metody tworzenia parametrow
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
