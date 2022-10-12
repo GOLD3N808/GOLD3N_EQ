@@ -10,14 +10,24 @@
 
 #include <JuceHeader.h>
 
-enum Slope
+enum LowSlope
 {
-    Slope_12,
-    Slope_24,
-    Slope_36,
-    Slope_48,
-    Slope_60,
-    Slope_72
+    LowSlope_12,
+    LowSlope_24,
+    LowSlope_36,
+    LowSlope_48,
+    LowSlope_60,
+    LowSlope_72
+};
+
+enum HighSlope
+{
+    HighSlope_12,
+    HighSlope_24,
+    HighSlope_36,
+    HighSlope_48,
+    HighSlope_60,
+    HighSlope_72
 };
 
 struct ChainSettings // polaczenie sygnalu z parametrami 
@@ -27,7 +37,8 @@ struct ChainSettings // polaczenie sygnalu z parametrami
     float middleBandF { 0 }, middleBandG { 0 }, middleBandQ { 1.f };
     float highBandF { 0 }, highBandG { 0 }, highBandQ { 1.f };
     //int lowCutSlope { 0 }, highCutSlope { 0 };
-    Slope lowCutSlope { Slope::Slope_12 }, highCutSlope { Slope::Slope_12 };
+    LowSlope lowCutSlope{ LowSlope::LowSlope_12 }; //highCutSlope{ Slope::Slope_12 };
+    HighSlope highCutSlope{ HighSlope::HighSlope_12 }; //highCutSlope{ Slope::Slope_12 };
 
 };
 
@@ -98,6 +109,10 @@ private:
         HighCut
         
     };
+
+   // void updatePeakFilter(const ChainSettings& chainSettings);
+   // using Coefficients = Filter::CoefficientsPtr;
+  //  static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
 
     
     //==============================================================================
