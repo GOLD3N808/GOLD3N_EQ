@@ -10,13 +10,24 @@
 
 #include <JuceHeader.h>
 
+enum Slope
+{
+    Slope_12,
+    Slope_24,
+    Slope_36,
+    Slope_48,
+    Slope_60,
+    Slope_72
+};
+
 struct ChainSettings // polaczenie sygnalu z parametrami 
 {
     float lowCut { 0 }, highCut { 0 };
     float lowBandF { 0 }, lowBandG { 0 }, lowBandQ { 1.f };
     float middleBandF { 0 }, middleBandG { 0 }, middleBandQ { 1.f };
     float highBandF { 0 }, highBandG { 0 }, highBandQ { 1.f };
-    int lowCutSlope { 0 }, highCutSlope { 0 };
+    //int lowCutSlope { 0 }, highCutSlope { 0 };
+    Slope lowCutSlope { Slope::Slope_12 }, highCutSlope { Slope::Slope_12 };
 
 };
 
@@ -66,13 +77,13 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(); // metoda tworzenia parametrow
-    juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameterLayout() }; //przypisanie parametrow
+    juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameterLayout() }; //stworzenie drzewa stanow, przypisanie parametrow
 
 private:
 
     using Filter = juce::dsp::IIR::Filter<float>;
 
-    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter, Filter, Filter>; //zmiana ilosci filtrow wzgledem ilosci slopow (6)
 
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>; // sygnal mono, zdefiniowany lancuch parametrow
 
