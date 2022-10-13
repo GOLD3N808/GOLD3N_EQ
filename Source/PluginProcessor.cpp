@@ -869,8 +869,8 @@ bool GOLD3N_EQAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* GOLD3N_EQAudioProcessor::createEditor()
 {
-    //return new GOLD3N_EQAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new GOLD3N_EQAudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
