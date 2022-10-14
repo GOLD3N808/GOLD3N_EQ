@@ -36,13 +36,31 @@ struct ChainSettings // polaczenie sygnalu z parametrami
     float lowBandF { 0 }, lowBandG { 0 }, lowBandQ { 1.f };
     float middleBandF { 0 }, middleBandG { 0 }, middleBandQ { 1.f };
     float highBandF { 0 }, highBandG { 0 }, highBandQ { 1.f };
-    //int lowCutSlope { 0 }, highCutSlope { 0 };
-    LowSlope lowCutSlope{ LowSlope::LowSlope_12 }; //highCutSlope{ Slope::Slope_12 };
-    HighSlope highCutSlope{ HighSlope::HighSlope_12 }; //highCutSlope{ Slope::Slope_12 };
+    LowSlope lowCutSlope{ LowSlope::LowSlope_12 }; 
+    HighSlope highCutSlope{ HighSlope::HighSlope_12 }; 
 
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& TreeState);
+
+using Filter = juce::dsp::IIR::Filter<float>;
+
+using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter, Filter, Filter>; //zmiana ilosci filtrow wzgledem ilosci slopow (6)
+
+using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>; // sygnal mono, zdefiniowany lancuch parametrow
+
+enum ChainPositions
+{
+    LowCut,
+    LowBand,
+    MiddleBand,
+    HighBand,
+    HighCut
+
+};
+
+using Coefficients = Filter::CoefficientsPtr; //dodana metoda updateCoefficients dla response curve
+void updateCoefficients(Coefficients& old, const Coefficients& replacements);
 
 //==============================================================================
 /**
@@ -92,23 +110,11 @@ public:
 
 private:
 
-    using Filter = juce::dsp::IIR::Filter<float>;
-
-    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter, Filter, Filter>; //zmiana ilosci filtrow wzgledem ilosci slopow (6)
-
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>; // sygnal mono, zdefiniowany lancuch parametrow
+    
 
     MonoChain leftChain, rightChain; // rozbicie na stereo
 
-    enum ChainPositions
-    {
-        LowCut,
-        LowBand,
-        MiddleBand,
-        HighBand,
-        HighCut
-        
-    };
+    
 
    // void updatePeakFilter(const ChainSettings& chainSettings);
    // using Coefficients = Filter::CoefficientsPtr;

@@ -117,6 +117,7 @@ void GOLD3N_EQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     auto highBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
         sampleRate, highChainSettings.highBandF, highChainSettings.highBandQ, juce::Decibels::decibelsToGain(highChainSettings.highBandG));
 
+
     // tu zrobimy jeszcze miejsce
 
     *leftChain.get<ChainPositions::LowBand>().coefficients = *lowBandCoefficients; // enum ChainPositions PP.h
@@ -910,6 +911,11 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& TreeState) //
 }
 
 //void GOLD3N_EQAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings)
+
+void updateCoefficients(Coefficients& old, const Coefficients& replacements) // definicja metody update coefficients dla response curve
+{
+    *old = *replacements;
+}
 
 
 juce::AudioProcessorValueTreeState::ParameterLayout

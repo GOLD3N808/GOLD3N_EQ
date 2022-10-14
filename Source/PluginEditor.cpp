@@ -35,22 +35,113 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
         addAndMakeVisible(comp);
     }
 
+    const auto& params = audioProcessor.getParameters();
+    for (auto param : params)
+    {
+        param->addListener(this);
+    }
+
+    startTimerHz(60); // dodany timer dla dzialania responsee curve
+
     setSize (900, 600);
 }
 
 GOLD3N_EQAudioProcessorEditor::~GOLD3N_EQAudioProcessorEditor()
 {
+    const auto& params = audioProcessor.getParameters();
+    for (auto param : params)
+    {
+        param->removeListener(this);
+    }
 }
 
 //==============================================================================
 void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    using namespace juce;
     // (Our component is opaque, so we must completely fill the background with a solid colour)
   //  g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(Colours::black);
 
-    //g.setColour (juce::Colours::white);
-    //g.setFont (15.0f);
-  //  g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    auto bounds = getLocalBounds();
+    auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.5);
+
+    auto RC = responseArea.getWidth();
+
+    auto& lowcut = monoChain.get<ChainPositions::LowCut>();
+    auto& lowband = monoChain.get<ChainPositions::LowBand>();
+    auto& middleband = monoChain.get<ChainPositions::MiddleBand>();
+    auto& highband = monoChain.get<ChainPositions::HighBand>();
+    auto& highcut = monoChain.get<ChainPositions::HighCut>();
+
+    auto sampleRate = audioProcessor.getSampleRate();
+
+    std::vector<double> magazines;
+
+    magazines.resize(RC);
+
+    for (int i = 0; i < RC; i++) // petla dla krzywej odpowiedzi
+    {
+        double magazine = 1.f;
+        auto freq = mapToLog10(double(i) / double(RC), 20.0, 20000.0);
+
+        if (!monoChain.isBypassed<ChainPositions::LowBand>())
+            magazine *= lowband.coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!monoChain.isBypassed<ChainPositions::MiddleBand>())
+            magazine *= middleband.coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!monoChain.isBypassed<ChainPositions::HighBand>())
+            magazine *= highband.coefficients->getMagnitudeForFrequency(freq, sampleRate);
+
+        if (!lowcut.isBypassed<0>())
+            magazine *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!lowcut.isBypassed<1>())
+            magazine *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!lowcut.isBypassed<2>())
+            magazine *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!lowcut.isBypassed<3>())
+            magazine *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!lowcut.isBypassed<4>())
+            magazine *= lowcut.get<4>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!lowcut.isBypassed<5>())
+            magazine *= lowcut.get<5>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+
+        if (!highcut.isBypassed<0>())
+            magazine *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!highcut.isBypassed<1>())
+            magazine *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!highcut.isBypassed<2>())
+            magazine *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!highcut.isBypassed<3>())
+            magazine *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!highcut.isBypassed<4>())
+            magazine *= highcut.get<4>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        if (!highcut.isBypassed<5>())
+            magazine *= highcut.get<5>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+
+        magazines[i] = Decibels::gainToDecibels(magazine);
+    }
+
+    Path responseCurve;
+
+    const double outputMin = responseArea.getBottom();
+    const double outputMax = responseArea.getY();
+    auto map = [outputMin, outputMax](double input)
+    {
+        return jmap(input, -24.0, 24.0, outputMin, outputMax);
+    };
+
+    responseCurve.startNewSubPath(responseArea.getX(), map(magazines.front()));
+
+    for (size_t i = 1; i < magazines.size(); i++)
+    {
+        responseCurve.lineTo(responseArea.getX() + i, map(magazines[i]));
+    }
+
+    g.setColour(Colours::brown);
+    g.drawRoundedRectangle(responseArea.toFloat(), 4.f, 1.f);
+
+    g.setColour(Colours::yellow);
+    g.strokePath(responseCurve, PathStrokeType(2.f));
 }
 
 void GOLD3N_EQAudioProcessorEditor::resized()
@@ -85,6 +176,34 @@ void GOLD3N_EQAudioProcessorEditor::resized()
     middleBandGainSlider.setBounds(middleBandArea.removeFromTop(middleBandArea.getHeight() * 0.5));
     middleBandQSlider.setBounds(middleBandArea);
 
+}
+
+void GOLD3N_EQAudioProcessorEditor::parameterValueChanged(int parameterIndex, float newValue)
+{
+    parametersChanged.set(true);
+}
+void GOLD3N_EQAudioProcessorEditor::timerCallback()
+{
+    if (parametersChanged.compareAndSetBool(false, true))
+    {
+        //up mono
+        auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto lowBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+            audioProcessor.getSampleRate(), lowChainSettings.lowBandF, lowChainSettings.lowBandQ, juce::Decibels::decibelsToGain(lowChainSettings.lowBandG));
+        updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
+
+        auto middleChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto middleBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+            audioProcessor.getSampleRate(), middleChainSettings.middleBandF, middleChainSettings.middleBandQ, juce::Decibels::decibelsToGain(middleChainSettings.middleBandG));
+        updateCoefficients(monoChain.get<ChainPositions::MiddleBand>().coefficients, middleBandCoefficients);
+
+        auto highChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto highBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+            audioProcessor.getSampleRate(), highChainSettings.highBandF, highChainSettings.highBandQ, juce::Decibels::decibelsToGain(highChainSettings.highBandG));
+        updateCoefficients(monoChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
+        //signal repaint
+        repaint();
+    }
 }
     std::vector<juce::Component*> GOLD3N_EQAudioProcessorEditor::getComps()
     {
