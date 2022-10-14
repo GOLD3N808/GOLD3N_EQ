@@ -12,12 +12,14 @@
 #include "PluginProcessor.h"
 
 struct MySliders : juce::Slider
+
 {
     MySliders() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
     {
         
     }
 };
+
 
 //==============================================================================
 /**
@@ -37,7 +39,38 @@ private:
     // access the processor object that created it.
     GOLD3N_EQAudioProcessor& audioProcessor;
 
-    MySliders lowBandFreqSlider, lowBandGainSlider, lowBandQSlider, middleBandFreqSlider, middleBandGainSlider, middleBandQSlider, highBandFreqSlider, highBandGainSlider, highBandQSlider, lowCutFreqSlider, highCutFreqSlider;
+    MySliders lowBandFreqSlider, 
+        lowBandGainSlider, 
+        lowBandQSlider, 
+        middleBandFreqSlider, 
+        middleBandGainSlider, 
+        middleBandQSlider, 
+        highBandFreqSlider, 
+        highBandGainSlider, 
+        highBandQSlider, 
+        lowCutFreqSlider, 
+        highCutFreqSlider, 
+        lowCutSlopeSlider, 
+        highCutSlopeSlider;
+
+    using TreeStateConnect = juce::AudioProcessorValueTreeState; // connect parametrow ze sliderami
+    using Attachment = TreeStateConnect::SliderAttachment;
+
+    Attachment lowBandFreqSliderAttachment,
+        lowBandGainSliderAttachment,
+        lowBandQSliderAttachment,
+        middleBandFreqSliderAttachment,
+        middleBandGainSliderAttachment,
+        middleBandQSliderAttachment,
+        highBandFreqSliderAttachment,
+        highBandGainSliderAttachment,
+        highBandQSliderAttachment,
+        lowCutFreqSliderAttachment,
+        highCutFreqSliderAttachment,
+        lowCutSlopeSliderAttachment,
+        highCutSlopeSliderAttachment;
+
+
 
     std::vector<juce::Component*> getComps();
 
