@@ -60,7 +60,127 @@ enum ChainPositions
 };
 
 using Coefficients = Filter::CoefficientsPtr; //dodana metoda updateCoefficients dla response curve
-void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+
+void updateCoefficients(Coefficients &old, const Coefficients &replacements);
+
+
+
+
+
+
+Coefficients makeLowBandFilter(const ChainSettings& lowChainSettings, double sampleRate);
+Coefficients makeMiddleBandFilter(const ChainSettings& middleChainSettings, double sampleRate);
+Coefficients makeHighBandFilter(const ChainSettings& highChainSettings, double sampleRate);
+
+
+template<int Index, typename ChainType, typename CoefficientType>
+void update(ChainType& chain, const CoefficientType& coefficients)
+{
+    updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+    chain.template setBypassed<Index>(false);
+}
+
+template<typename ChainType, typename CoefficientType>
+void updateLowCutFilter(ChainType& chain,
+    const CoefficientType& lowCutCoefficients,
+    //  const ChainSettings& lowCutChainSettings)
+    const LowSlope& lowCutSlope)
+{
+    chain.template setBypassed<0>(true);
+    chain.template setBypassed<1>(true);
+    chain.template setBypassed<2>(true);
+    chain.template setBypassed<3>(true);
+    chain.template setBypassed<4>(true);
+    chain.template setBypassed<5>(true);
+
+    // switch (lowCutChainSettings.lowCutSlope)  //switch okreslajacy ktory slope ma zostac uruchomiony
+    switch (lowCutSlope)
+    {
+    case LowSlope_72:
+    {
+        update<5>(chain, lowCutCoefficients);
+    }
+    case LowSlope_60:
+    {
+        update<4>(chain, lowCutCoefficients);
+    }
+    case LowSlope_48:
+    {
+        update<3>(chain, lowCutCoefficients);
+    }
+    case LowSlope_36:
+    {
+        update<2>(chain, lowCutCoefficients);
+    }
+    case LowSlope_24:
+    {
+        update<1>(chain, lowCutCoefficients);
+    }
+    case LowSlope_12:
+    {
+        update<0>(chain, lowCutCoefficients);
+    }
+
+  
+    }
+
+}
+
+template<typename ChainType, typename CoefficientType>
+void updateHighCutFilter(ChainType& chain,
+    const CoefficientType& highCutCoefficients,
+    const HighSlope& highCutSlope)
+{
+    chain.template setBypassed<0>(true);
+    chain.template setBypassed<1>(true);
+    chain.template setBypassed<2>(true);
+    chain.template setBypassed<3>(true);
+    chain.template setBypassed<4>(true);
+    chain.template setBypassed<5>(true);
+
+  //switch okreslajacy ktory slope ma zostac uruchomiony
+    switch (highCutSlope)
+    {
+    case HighSlope_72:
+    {
+        update<5>(chain, highCutCoefficients);
+    }
+    case HighSlope_60:
+    {
+        update<4>(chain, highCutCoefficients);
+    }
+    case HighSlope_48:
+    {
+        update<3>(chain, highCutCoefficients);
+    }
+    case HighSlope_36:
+    {
+        update<2>(chain, highCutCoefficients);
+    }
+    case HighSlope_24:
+    {
+        update<1>(chain, highCutCoefficients);
+    }
+    case HighSlope_12:
+    {
+        update<0>(chain, highCutCoefficients);
+    }
+
+    }
+}
+
+
+
+
+inline auto makeLowCutFilter(const ChainSettings& lowCutChainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(lowCutChainSettings.lowCut, sampleRate, 2 * (lowCutChainSettings.lowCutSlope + 1));
+}
+
+inline auto makeHighCutFilter(const ChainSettings& highCutChainSettings, double sampleRate)
+{
+    return juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(highCutChainSettings.highCut, sampleRate, 2 * (highCutChainSettings.highCutSlope + 1));
+}
 
 //==============================================================================
 /**
@@ -108,17 +228,28 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout(); // metoda tworzenia parametrow
     juce::AudioProcessorValueTreeState TreeState { *this, nullptr, "Parameters", createParameterLayout() }; //stworzenie drzewa stanow, przypisanie parametrow
 
+    
+
 private:
 
     
 
     MonoChain leftChain, rightChain; // rozbicie na stereo
 
+    void updateLowBandFilter(const ChainSettings& lowChainSettings);
+    void updateMiddleBandFilter(const ChainSettings& middleChainSettings);
+    void updateHighBandFilter(const ChainSettings& highChainSettings);
+
     
 
-   // void updatePeakFilter(const ChainSettings& chainSettings);
-   // using Coefficients = Filter::CoefficientsPtr;
-  //  static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+    
+
+    void updateLowCutFilters(const ChainSettings& lowCutChainSettings);
+    void updateHighCutFilters(const ChainSettings& highCutChainSettings);
+
+    void updateFilters();
+    
+    
 
     
     //==============================================================================

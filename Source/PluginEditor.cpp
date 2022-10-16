@@ -188,19 +188,25 @@ void GOLD3N_EQAudioProcessorEditor::timerCallback()
     {
         //up mono
         auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto lowBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-            audioProcessor.getSampleRate(), lowChainSettings.lowBandF, lowChainSettings.lowBandQ, juce::Decibels::decibelsToGain(lowChainSettings.lowBandG));
+        auto lowBandCoefficients = makeLowBandFilter(lowChainSettings, audioProcessor.getSampleRate());
         updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
 
         auto middleChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto middleBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-            audioProcessor.getSampleRate(), middleChainSettings.middleBandF, middleChainSettings.middleBandQ, juce::Decibels::decibelsToGain(middleChainSettings.middleBandG));
+        auto middleBandCoefficients = makeMiddleBandFilter(middleChainSettings, audioProcessor.getSampleRate());
         updateCoefficients(monoChain.get<ChainPositions::MiddleBand>().coefficients, middleBandCoefficients);
 
         auto highChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto highBandCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-            audioProcessor.getSampleRate(), highChainSettings.highBandF, highChainSettings.highBandQ, juce::Decibels::decibelsToGain(highChainSettings.highBandG));
+        auto highBandCoefficients = makeHighBandFilter(highChainSettings, audioProcessor.getSampleRate());
         updateCoefficients(monoChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
+
+        auto lowCutChainSettings = getChainSettings(audioProcessor.TreeState);
+        auto lowCutCoefficients = makeLowCutFilter(lowCutChainSettings, audioProcessor.getSampleRate());
+        auto highCutChainSettings = getChainSettings(audioProcessor.TreeState);
+        auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, audioProcessor.getSampleRate());
+        
+        updateLowCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, lowCutChainSettings.lowCutSlope);
+        updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);
+        
         //signal repaint
         repaint();
     }
