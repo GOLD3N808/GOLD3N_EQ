@@ -9,32 +9,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
-GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-    lowCutFreqSliderAttachment(audioProcessor.TreeState, "LowCut Frequency", lowCutFreqSlider),
-    highCutFreqSliderAttachment(audioProcessor.TreeState, "HighCut Frequency", highCutFreqSlider),
-    lowBandFreqSliderAttachment(audioProcessor.TreeState, "Low Band Frequency", lowBandFreqSlider),
-    lowBandGainSliderAttachment(audioProcessor.TreeState, "Low Band Gain", lowBandGainSlider),
-    lowBandQSliderAttachment(audioProcessor.TreeState, "Low Band Q", lowBandQSlider),
-    middleBandFreqSliderAttachment(audioProcessor.TreeState, "Middle Band Frequency", middleBandFreqSlider),
-    middleBandGainSliderAttachment(audioProcessor.TreeState, "Middle Band Gain", middleBandGainSlider),
-    middleBandQSliderAttachment(audioProcessor.TreeState, "Middle Band Q", middleBandQSlider),
-    highBandFreqSliderAttachment(audioProcessor.TreeState, "High Band Frequency", highBandFreqSlider),
-    highBandGainSliderAttachment(audioProcessor.TreeState, "High Band Gain", highBandGainSlider),
-    highBandQSliderAttachment(audioProcessor.TreeState, "High Band Q", highBandQSlider),
-    lowCutSlopeSliderAttachment(audioProcessor.TreeState, "LowCut Slope", lowCutSlopeSlider),
-    highCutSlopeSliderAttachment(audioProcessor.TreeState, "HighCut Slope", highCutSlopeSlider)
-
+ResponseCurveComponent::ResponseCurveComponent(GOLD3N_EQAudioProcessor& p) : audioProcessor(p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-
-    for (auto* comp : getComps())
-    {
-        addAndMakeVisible(comp);
-    }
-
     const auto& params = audioProcessor.getParameters();
     for (auto param : params)
     {
@@ -42,11 +18,9 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
     }
 
     startTimerHz(60); // dodany timer dla dzialania responsee curve
-
-    setSize (900, 600);
 }
 
-GOLD3N_EQAudioProcessorEditor::~GOLD3N_EQAudioProcessorEditor()
+ResponseCurveComponent::~ResponseCurveComponent()
 {
     const auto& params = audioProcessor.getParameters();
     for (auto param : params)
@@ -55,8 +29,41 @@ GOLD3N_EQAudioProcessorEditor::~GOLD3N_EQAudioProcessorEditor()
     }
 }
 
-//==============================================================================
-void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
+void ResponseCurveComponent::parameterValueChanged(int parameterIndex, float newValue)
+{
+    parametersChanged.set(true);
+}
+void ResponseCurveComponent::timerCallback()
+{
+    if (parametersChanged.compareAndSetBool(false, true))
+    {
+        //up mono
+        auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto lowBandCoefficients = makeLowBandFilter(lowChainSettings, audioProcessor.getSampleRate());
+        updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
+
+        auto middleChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto middleBandCoefficients = makeMiddleBandFilter(middleChainSettings, audioProcessor.getSampleRate());
+        updateCoefficients(monoChain.get<ChainPositions::MiddleBand>().coefficients, middleBandCoefficients);
+
+        auto highChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+        auto highBandCoefficients = makeHighBandFilter(highChainSettings, audioProcessor.getSampleRate());
+        updateCoefficients(monoChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
+
+        auto lowCutChainSettings = getChainSettings(audioProcessor.TreeState);
+        auto lowCutCoefficients = makeLowCutFilter(lowCutChainSettings, audioProcessor.getSampleRate());
+        auto highCutChainSettings = getChainSettings(audioProcessor.TreeState);
+        auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, audioProcessor.getSampleRate());
+
+        updateLowCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, lowCutChainSettings.lowCutSlope);
+        updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);
+
+        //signal repaint
+        repaint();
+    }
+}
+
+void ResponseCurveComponent::paint(juce::Graphics& g)
 {
     using namespace juce;
     // (Our component is opaque, so we must completely fill the background with a solid colour)
@@ -64,7 +71,7 @@ void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(Colours::black);
 
     auto bounds = getLocalBounds();
-    auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.5);
+    auto responseArea = (bounds);
 
     auto RC = responseArea.getWidth();
 
@@ -144,12 +151,63 @@ void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
     g.strokePath(responseCurve, PathStrokeType(2.f));
 }
 
+//==============================================================================
+GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p),
+    responseCurveComponent(audioProcessor),
+    lowCutFreqSliderAttachment(audioProcessor.TreeState, "LowCut Frequency", lowCutFreqSlider),
+    highCutFreqSliderAttachment(audioProcessor.TreeState, "HighCut Frequency", highCutFreqSlider),
+    lowBandFreqSliderAttachment(audioProcessor.TreeState, "Low Band Frequency", lowBandFreqSlider),
+    lowBandGainSliderAttachment(audioProcessor.TreeState, "Low Band Gain", lowBandGainSlider),
+    lowBandQSliderAttachment(audioProcessor.TreeState, "Low Band Q", lowBandQSlider),
+    middleBandFreqSliderAttachment(audioProcessor.TreeState, "Middle Band Frequency", middleBandFreqSlider),
+    middleBandGainSliderAttachment(audioProcessor.TreeState, "Middle Band Gain", middleBandGainSlider),
+    middleBandQSliderAttachment(audioProcessor.TreeState, "Middle Band Q", middleBandQSlider),
+    highBandFreqSliderAttachment(audioProcessor.TreeState, "High Band Frequency", highBandFreqSlider),
+    highBandGainSliderAttachment(audioProcessor.TreeState, "High Band Gain", highBandGainSlider),
+    highBandQSliderAttachment(audioProcessor.TreeState, "High Band Q", highBandQSlider),
+    lowCutSlopeSliderAttachment(audioProcessor.TreeState, "LowCut Slope", lowCutSlopeSlider),
+    highCutSlopeSliderAttachment(audioProcessor.TreeState, "HighCut Slope", highCutSlopeSlider)
+    
+
+{
+    // Make sure that before the constructor has finished, you've set the
+    // editor's size to whatever you need it to be.
+
+    for (auto* comp : getComps())
+    {
+        addAndMakeVisible(comp);
+    }
+
+
+
+    setSize (900, 600);
+}
+
+GOLD3N_EQAudioProcessorEditor::~GOLD3N_EQAudioProcessorEditor()
+{
+
+}
+
+//==============================================================================
+void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
+{
+    using namespace juce;
+    // (Our component is opaque, so we must completely fill the background with a solid colour)
+  //  g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(Colours::black);
+
+
+}
+
 void GOLD3N_EQAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds(); // dodane slidery
     
 
     auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.5);
+
+    responseCurveComponent.setBounds(responseArea);
 
     auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
@@ -178,39 +236,7 @@ void GOLD3N_EQAudioProcessorEditor::resized()
 
 }
 
-void GOLD3N_EQAudioProcessorEditor::parameterValueChanged(int parameterIndex, float newValue)
-{
-    parametersChanged.set(true);
-}
-void GOLD3N_EQAudioProcessorEditor::timerCallback()
-{
-    if (parametersChanged.compareAndSetBool(false, true))
-    {
-        //up mono
-        auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto lowBandCoefficients = makeLowBandFilter(lowChainSettings, audioProcessor.getSampleRate());
-        updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
 
-        auto middleChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto middleBandCoefficients = makeMiddleBandFilter(middleChainSettings, audioProcessor.getSampleRate());
-        updateCoefficients(monoChain.get<ChainPositions::MiddleBand>().coefficients, middleBandCoefficients);
-
-        auto highChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
-        auto highBandCoefficients = makeHighBandFilter(highChainSettings, audioProcessor.getSampleRate());
-        updateCoefficients(monoChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
-
-        auto lowCutChainSettings = getChainSettings(audioProcessor.TreeState);
-        auto lowCutCoefficients = makeLowCutFilter(lowCutChainSettings, audioProcessor.getSampleRate());
-        auto highCutChainSettings = getChainSettings(audioProcessor.TreeState);
-        auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, audioProcessor.getSampleRate());
-        
-        updateLowCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, lowCutChainSettings.lowCutSlope);
-        updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);
-        
-        //signal repaint
-        repaint();
-    }
-}
     std::vector<juce::Component*> GOLD3N_EQAudioProcessorEditor::getComps()
     {
         return
@@ -227,7 +253,8 @@ void GOLD3N_EQAudioProcessorEditor::timerCallback()
             &lowCutFreqSlider,
             &highCutFreqSlider,
             &lowCutSlopeSlider,
-            &highCutSlopeSlider
+            &highCutSlopeSlider,
+            &responseCurveComponent
         };
     }
 
