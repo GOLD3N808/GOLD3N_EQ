@@ -9,6 +9,67 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+void LookAndFeel::drawRotarySlider(juce::Graphics& g,
+    int x, int y, int width, int height,
+    float sliderPosProportional,
+    float rotaryStartAngle,
+    float rotaryEndAngle,
+    juce::Slider& slider)
+{
+    using namespace juce;
+
+
+    auto bounds = Rectangle<float>(x, y, width, height);
+    g.setColour(Colour(99u, 9u, 1u));
+    g.fillEllipse(bounds);
+
+    g.setColour(Colour(250u, 249u, 247u));
+    g.drawEllipse(bounds, 1.f);
+
+    auto center = bounds.getCentre();
+
+    Path p;
+
+    Rectangle<float> r;
+    r.setLeft(center.getX() - 2);
+    r.setRight(center.getX() + 2);
+    r.setTop(bounds.getY());
+    r.setBottom(center.getY());
+
+    p.addRectangle(r);
+
+    jassert(rotaryStartAngle < rotaryEndAngle);
+
+    auto sliderAngRad = jmap(sliderPosProportional, 0.f, 1.f, rotaryStartAngle, rotaryEndAngle);
+
+    p.applyTransform(AffineTransform().rotated(sliderAngRad, center.getX(), center.getY()));
+
+    g.fillPath(p);
+}
+
+void MySlidersLabels::paint(juce::Graphics &g)
+{
+    using namespace juce;
+
+    auto startAng = degreesToRadians(180.f + 45.f);
+    auto endAng = degreesToRadians(180.f - 45.f) + MathConstants<float>::twoPi;
+
+    auto range = getRange();
+
+    auto sliderBounds = getSliderBounds();
+
+    getLookAndFeel().drawRotarySlider(g, sliderBounds.getX(), sliderBounds.getY(), sliderBounds.getWidth(), 
+        sliderBounds.getHeight(), jmap(getValue(), range.getStart(),
+       range.getEnd(), 0.0, 1.0), startAng, endAng, *this);
+
+    
+}
+
+juce::Rectangle<int> MySlidersLabels::getSliderBounds() const
+{
+    return getLocalBounds();
+}
+
 ResponseCurveComponent::ResponseCurveComponent(GOLD3N_EQAudioProcessor& p) : audioProcessor(p)
 {
     const auto& params = audioProcessor.getParameters();
@@ -154,6 +215,20 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
 //==============================================================================
 GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
+    lowCutFreqSlider(*audioProcessor.TreeState.getParameter("Low Cut Frequency"), "Hz"),
+    highCutFreqSlider(*audioProcessor.TreeState.getParameter("HighCut Frequency"), "Hz"),
+    lowBandFreqSlider(*audioProcessor.TreeState.getParameter("Low Band Frequency"), "Hz"),
+    lowBandGainSlider(*audioProcessor.TreeState.getParameter("Low Band Gain"), "dB"),
+    lowBandQSlider(*audioProcessor.TreeState.getParameter("Low Band Q"), ""),
+    middleBandFreqSlider(*audioProcessor.TreeState.getParameter("Middle Band Frequency"), "Hz"),
+    middleBandGainSlider(*audioProcessor.TreeState.getParameter("Middle Band Gain"), "dB"),
+    middleBandQSlider(*audioProcessor.TreeState.getParameter("Middle Band Q"), ""),
+    highBandFreqSlider(*audioProcessor.TreeState.getParameter("High Band Frequency"), "Hz"),
+    highBandGainSlider(*audioProcessor.TreeState.getParameter("High Band Gain"), "dB"),
+    highBandQSlider(*audioProcessor.TreeState.getParameter("High Band Q"), ""),
+    lowCutSlopeSlider(*audioProcessor.TreeState.getParameter("LowCut Slope"), "dB/Oct"),
+    highCutSlopeSlider(*audioProcessor.TreeState.getParameter("HighCut Slope"), "dB/Oct"),
+
     responseCurveComponent(audioProcessor),
     lowCutFreqSliderAttachment(audioProcessor.TreeState, "LowCut Frequency", lowCutFreqSlider),
     highCutFreqSliderAttachment(audioProcessor.TreeState, "HighCut Frequency", highCutFreqSlider),
