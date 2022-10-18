@@ -9,7 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-void LookAndFeel::drawRotarySlider(juce::Graphics& g,
+/*void LookAndFeel::drawRotarySlider(juce::Graphics& g,
     int x, int y, int width, int height,
     float sliderPosProportional,
     float rotaryStartAngle,
@@ -45,9 +45,9 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
     p.applyTransform(AffineTransform().rotated(sliderAngRad, center.getX(), center.getY()));
 
     g.fillPath(p);
-}
+}*/
 
-void MySlidersLabels::paint(juce::Graphics &g)
+/*void MySlidersLabels::paint(juce::Graphics& g)
 {
     using namespace juce;
 
@@ -63,12 +63,12 @@ void MySlidersLabels::paint(juce::Graphics &g)
        range.getEnd(), 0.0, 1.0), startAng, endAng, *this);
 
     
-}
+}*/
 
-juce::Rectangle<int> MySlidersLabels::getSliderBounds() const
+/*juce::Rectangle<int> MySlidersLabels::getSliderBounds() const
 {
     return getLocalBounds();
-}
+}*/
 
 ResponseCurveComponent::ResponseCurveComponent(GOLD3N_EQAudioProcessor& p) : audioProcessor(p)
 {
@@ -130,6 +130,8 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
   //  g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
     g.fillAll(Colours::black);
+
+    g.drawImage(background, getLocalBounds().toFloat());
 
     auto bounds = getLocalBounds();
     auto responseArea = (bounds);
@@ -205,17 +207,54 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
         responseCurve.lineTo(responseArea.getX() + i, map(magazines[i]));
     }
 
-    g.setColour(Colours::brown);
+    g.setColour(Colours::black);
     g.drawRoundedRectangle(responseArea.toFloat(), 4.f, 1.f);
 
-    g.setColour(Colours::yellow);
-    g.strokePath(responseCurve, PathStrokeType(2.f));
+    g.setColour(Colours::purple);
+    g.strokePath(responseCurve, PathStrokeType(4.f));
+
+}
+
+void ResponseCurveComponent::resized()
+{
+    using namespace juce;
+    background = Image(Image::PixelFormat::RGB, getWidth(), getHeight(), true); // metoda resized dla narysowania siatki
+
+        Graphics g(background);
+
+        Array<float> freqs
+        {
+                20, 30, 40, 50, 100,
+                200, 300, 400, 500, 1000,
+                2000, 3000, 4000, 5000, 10000, 20000
+        };
+
+        g.setColour(Colours::white);
+        for (auto f : freqs)
+        {
+            auto normX = mapFromLog10(f, 20.f, 20000.f);
+
+            g.drawVerticalLine(getWidth() * normX, 0.f, getHeight());
+        }
+
+        Array<float> gain
+        {
+            -24, -12, 0, 12, 24
+        };
+
+        
+        for (auto gDb : gain)
+        {
+            auto y = jmap(gDb, -24.f, 24.f, float(getHeight()), 0.f);
+
+            g.drawHorizontalLine(y, 0, getWidth());
+        }
 }
 
 //==============================================================================
 GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
-    lowCutFreqSlider(*audioProcessor.TreeState.getParameter("Low Cut Frequency"), "Hz"),
+   /* lowCutFreqSlider(*audioProcessor.TreeState.getParameter("Low Cut Frequency"), "Hz"),
     highCutFreqSlider(*audioProcessor.TreeState.getParameter("HighCut Frequency"), "Hz"),
     lowBandFreqSlider(*audioProcessor.TreeState.getParameter("Low Band Frequency"), "Hz"),
     lowBandGainSlider(*audioProcessor.TreeState.getParameter("Low Band Gain"), "dB"),
@@ -227,7 +266,7 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
     highBandGainSlider(*audioProcessor.TreeState.getParameter("High Band Gain"), "dB"),
     highBandQSlider(*audioProcessor.TreeState.getParameter("High Band Q"), ""),
     lowCutSlopeSlider(*audioProcessor.TreeState.getParameter("LowCut Slope"), "dB/Oct"),
-    highCutSlopeSlider(*audioProcessor.TreeState.getParameter("HighCut Slope"), "dB/Oct"),
+    highCutSlopeSlider(*audioProcessor.TreeState.getParameter("HighCut Slope"), "dB/Oct"),*/
 
     responseCurveComponent(audioProcessor),
     lowCutFreqSliderAttachment(audioProcessor.TreeState, "LowCut Frequency", lowCutFreqSlider),
@@ -246,6 +285,11 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
     
 
 {
+    using namespace juce;
+
+    
+
+    
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
@@ -253,6 +297,30 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
     {
         addAndMakeVisible(comp);
     }
+
+    lowCutFreqSlider.setTextValueSuffix("Hz");
+    highCutFreqSlider.setTextValueSuffix("Hz");
+
+    lowBandFreqSlider.setTextValueSuffix("Hz");
+    lowBandGainSlider.setTextValueSuffix("dB");
+    lowBandQSlider.setTextValueSuffix("");
+    middleBandFreqSlider.setTextValueSuffix("Hz");
+    middleBandGainSlider.setTextValueSuffix("dB");
+    middleBandQSlider.setTextValueSuffix("");
+    highBandFreqSlider.setTextValueSuffix("Hz");
+    highBandGainSlider.setTextValueSuffix("dB");
+    highBandQSlider.setTextValueSuffix("");
+
+
+
+    getLookAndFeel().setColour(Slider::rotarySliderOutlineColourId, Colours::violet);
+    getLookAndFeel().setColour(Slider::rotarySliderFillColourId, Colours::black);
+
+
+
+
+    
+  //  configureSliderColour(Colours::violet);
 
 
 
@@ -265,15 +333,23 @@ GOLD3N_EQAudioProcessorEditor::~GOLD3N_EQAudioProcessorEditor()
 }
 
 //==============================================================================
-void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& g)
+void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& gg)
 {
     using namespace juce;
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-  //  g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-    g.fillAll(Colours::black);
+    //g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+  gg.setGradientFill(ColourGradient{ Colours::darkgrey.brighter(0.2f), getLocalBounds().toFloat().getCentre(), Colours::darkgrey.darker(0.8f), {}, true });
+  gg.fillRect(getLocalBounds());
+
+
+ 
+
 
 
 }
+
+
+
 
 void GOLD3N_EQAudioProcessorEditor::resized()
 {
