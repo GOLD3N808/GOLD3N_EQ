@@ -312,9 +312,9 @@ GOLD3N_EQAudioProcessorEditor::GOLD3N_EQAudioProcessorEditor(GOLD3N_EQAudioProce
     highBandQSlider.setTextValueSuffix("");
 
 
-
-    getLookAndFeel().setColour(Slider::rotarySliderOutlineColourId, Colours::violet);
-    getLookAndFeel().setColour(Slider::rotarySliderFillColourId, Colours::black);
+    getLookAndFeel().setColour(Slider::thumbColourId, Colours::white);
+    getLookAndFeel().setColour(Slider::rotarySliderOutlineColourId, Colours::darkmagenta);
+    getLookAndFeel().setColour(Slider::rotarySliderFillColourId, Colours::violet);
 
 
 
@@ -338,7 +338,7 @@ void GOLD3N_EQAudioProcessorEditor::paint (juce::Graphics& gg)
     using namespace juce;
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     //g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-  gg.setGradientFill(ColourGradient{ Colours::darkgrey.brighter(0.2f), getLocalBounds().toFloat().getCentre(), Colours::darkgrey.darker(0.8f), {}, true });
+  gg.setGradientFill(ColourGradient{ Colours::black.brighter(0.2f), getLocalBounds().toFloat().getCentre(), Colours::black.darker(0.8f), {}, true });
   gg.fillRect(getLocalBounds());
 
 

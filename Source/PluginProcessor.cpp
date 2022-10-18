@@ -355,7 +355,7 @@ GOLD3N_EQAudioProcessor::createParameterLayout() // definicja metody tworzenia p
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Low Band Gain", "Low Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Low Band Q", "Low Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+        "Low Band Q", "Low Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 0.24f), 1.f));
 
 
    layout.add(std::make_unique<juce::AudioParameterFloat>( // band w srednicy
@@ -363,14 +363,14 @@ GOLD3N_EQAudioProcessor::createParameterLayout() // definicja metody tworzenia p
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Middle Band Gain", "Middle Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Middle Band Q", "Middle Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+        "Middle Band Q", "Middle Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 0.23f), 1.f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>( // band w gorze
-        "High Band Frequency", "High Band Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 0.25f), 5000.f));
+        "High Band Frequency", "High Band Frequency", juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 0.23f), 5000.f));
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "High Band Gain", "High Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "High Band Q", "High Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 1.f), 1.f));
+        "High Band Q", "High Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 0.23f), 1.f));
 
     juce::StringArray slopeArray; //lista rozwijana z mozliwoscia wyboru nachylenia zbocza filtrow (db/Oct)
     for (int i = 0; i < 6; i++)
