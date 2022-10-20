@@ -355,7 +355,7 @@ GOLD3N_EQAudioProcessor::createParameterLayout() // definicja metody tworzenia p
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Low Band Gain", "Low Band Gain", juce::NormalisableRange<float>(- 30.f, 30.f, 0.1f, 1.f), 0.0f));
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Low Band Q", "Low Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 0.24f), 1.f));
+        "Low Band Q", "Low Band Q", juce::NormalisableRange<float>(0.05f, 20.f, 0.01f, 0.23f), 1.f));
 
 
    layout.add(std::make_unique<juce::AudioParameterFloat>( // band w srednicy
