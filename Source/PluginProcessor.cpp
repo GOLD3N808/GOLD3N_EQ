@@ -107,13 +107,15 @@ void GOLD3N_EQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     leftChain.prepare(prepareSpec);
     rightChain.prepare(prepareSpec);
 
-
-
     updateFilters();
 
-    
+    leftChannelFifo.prepare(samplesPerBlock);
+    rightChannelFifo.prepare(samplesPerBlock);
 
-
+  //  osc.initialise([](float x) {return std::sin(x); });
+ //   prepareSpec.numChannels = getTotalNumOutputChannels();
+ //   osc.prepare(prepareSpec);
+  //  osc.setFrequency(1000);
 }
 
 void GOLD3N_EQAudioProcessor::releaseResources()
@@ -163,19 +165,13 @@ void GOLD3N_EQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-
-
     updateFilters();
 
-   
-
-
-
-
-
-
-
     juce::dsp::AudioBlock<float> block(buffer); // stworzenie buffora dla obu kanalow
+
+  //  buffer.clear();
+  //  juce::dsp::ProcessContextReplacing<float> stereoContext(block);
+  //  osc.process(stereoContext);
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -185,6 +181,9 @@ void GOLD3N_EQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     leftChain.process(leftContext);
     rightChain.process(rightContext);
+
+    leftChannelFifo.update(buffer);
+    rightChannelFifo.update(buffer);
 
 }
 
@@ -232,11 +231,8 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& TreeState) //
     paramSettings.lowCutSlope = static_cast<LowSlope>(TreeState.getRawParameterValue("LowCut Slope")->load());
     paramSettings.highCutSlope = static_cast<HighSlope>(TreeState.getRawParameterValue("HighCut Slope")->load());
 
-
     return paramSettings;
 }
-
-
 
 Coefficients makeLowBandFilter(const ChainSettings& lowChainSettings, double sampleRate)
 {
@@ -280,7 +276,6 @@ void GOLD3N_EQAudioProcessor::updateHighBandFilter(const ChainSettings &highChai
 {
     auto highBandCoefficients = makeHighBandFilter(highChainSettings, getSampleRate());
 
-
        updateCoefficients(leftChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
        updateCoefficients(rightChain.get<ChainPositions::HighBand>().coefficients, highBandCoefficients);
 
@@ -293,14 +288,11 @@ void updateCoefficients(Coefficients& old, const Coefficients& replacements) // 
 
 void GOLD3N_EQAudioProcessor::updateLowCutFilters(const ChainSettings &lowCutChainSettings)
 {
-    auto lowCutCoefficients = makeLowCutFilter(lowCutChainSettings, getSampleRate()); //juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(lowCutChainSettings.lowCut, getSampleRate(), 2 * (lowCutChainSettings.lowCutSlope + 1)); //wspolczynniki dla lowcut
+    auto lowCutCoefficients = makeLowCutFilter(lowCutChainSettings, getSampleRate());
 
     auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
 
     updateLowCutFilter(leftLowCut, lowCutCoefficients, lowCutChainSettings.lowCutSlope);
-
-
-
 
     auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
 
@@ -309,13 +301,11 @@ void GOLD3N_EQAudioProcessor::updateLowCutFilters(const ChainSettings &lowCutCha
 
 void GOLD3N_EQAudioProcessor::updateHighCutFilters(const ChainSettings &highCutChainSettings)
 {
-    auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, getSampleRate());   // juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(highCutChainSettings.highCut, getSampleRate(), 2 * (highCutChainSettings.highCutSlope + 1));
+    auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, getSampleRate());   
 
     auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
 
     updateHighCutFilter(leftHighCut, highCutCoefficients, highCutChainSettings.highCutSlope);
-
-
 
     auto& rightHighCut = rightChain.get<ChainPositions::HighCut>(); //ten sam switch co powyzej tylko dla prawego kanalu
 
@@ -337,7 +327,6 @@ void GOLD3N_EQAudioProcessor::updateFilters()
     updateHighCutFilters(highCutChainSettings);
 
 }
-
 
 juce::AudioProcessorValueTreeState::ParameterLayout
 GOLD3N_EQAudioProcessor::createParameterLayout() // definicja metody tworzenia parametrow

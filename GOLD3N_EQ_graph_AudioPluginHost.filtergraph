@@ -61,11 +61,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="15" x="0.5775" y="0.5161290322580645" uiLastX_Normal="-1458"
-          uiLastY_Normal="263" uiopen_Normal="0">
+  <FILTER uid="15" x="0.5962499999999999" y="0.4980694980694981" uiLastX_Normal="-1455"
+          uiLastY_Normal="259" uiopen_Normal="0">
     <PLUGIN name="GOLD3N_EQ" format="VST3" category="Fx" manufacturer="yourcompany"
             version="1.0.0" file="C:\Users\arkmo\Desktop\Praca inzynierska\GOLD3N_EQ\Builds\VisualStudio2022\x64\Debug\VST3\GOLD3N_EQ.vst3"
-            uniqueId="fa98db1d" isInstrument="0" fileTime="183ec3ec791" infoUpdateTime="183ec405b64"
+            uniqueId="fa98db1d" isInstrument="0" fileTime="183f7c03ee1" infoUpdateTime="183fadc14e4"
             numInputs="2" numOutputs="2" isShell="0" uid="e956fe1b"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
     <LAYOUT>
