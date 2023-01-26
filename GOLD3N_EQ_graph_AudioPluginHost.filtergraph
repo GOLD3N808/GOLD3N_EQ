@@ -31,7 +31,7 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="3" x="0.5" y="0.9">
+  <FILTER uid="3" x="0.50375" y="0.9073359073359073">
     <PLUGIN name="Audio Output" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="JUCE" version="1.0" file="" uniqueId="724248cb"
             isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="2"
@@ -61,11 +61,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="15" x="0.5962499999999999" y="0.4980694980694981" uiLastX_Normal="-1455"
-          uiLastY_Normal="259" uiopen_Normal="0">
+  <FILTER uid="17" x="0.6025" y="0.4671814671814672" uiLastX_Normal="166"
+          uiLastY_Normal="243" uiopen_Normal="0">
     <PLUGIN name="GOLD3N_EQ" format="VST3" category="Fx" manufacturer="yourcompany"
             version="1.0.0" file="C:\Users\arkmo\Desktop\Praca inzynierska\GOLD3N_EQ\Builds\VisualStudio2022\x64\Debug\VST3\GOLD3N_EQ.vst3"
-            uniqueId="fa98db1d" isInstrument="0" fileTime="183f7c03ee1" infoUpdateTime="183fadc14e4"
+            uniqueId="fa98db1d" isInstrument="0" fileTime="185f003d6a2" infoUpdateTime="185f008c6be"
             numInputs="2" numOutputs="2" isShell="0" uid="e956fe1b"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
     <LAYOUT>
@@ -77,9 +77,9 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <CONNECTION srcFilter="1" srcChannel="0" dstFilter="15" dstChannel="0"/>
-  <CONNECTION srcFilter="1" srcChannel="1" dstFilter="15" dstChannel="1"/>
+  <CONNECTION srcFilter="1" srcChannel="0" dstFilter="17" dstChannel="0"/>
+  <CONNECTION srcFilter="1" srcChannel="1" dstFilter="17" dstChannel="1"/>
   <CONNECTION srcFilter="2" srcChannel="4096" dstFilter="4" dstChannel="4096"/>
-  <CONNECTION srcFilter="15" srcChannel="0" dstFilter="3" dstChannel="0"/>
-  <CONNECTION srcFilter="15" srcChannel="1" dstFilter="3" dstChannel="1"/>
+  <CONNECTION srcFilter="17" srcChannel="0" dstFilter="3" dstChannel="0"/>
+  <CONNECTION srcFilter="17" srcChannel="1" dstFilter="3" dstChannel="1"/>
 </FILTERGRAPH>

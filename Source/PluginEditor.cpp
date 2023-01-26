@@ -20,7 +20,9 @@ rightPathProducer(audioProcessor.rightChannelFifo)
         param->addListener(this);
     }
 
-    auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
+    updateChain();
+
+    /*auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
     auto lowBandCoefficients = makeLowBandFilter(lowChainSettings, audioProcessor.getSampleRate());
     updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
 
@@ -38,7 +40,7 @@ rightPathProducer(audioProcessor.rightChannelFifo)
     auto highCutCoefficients = makeHighCutFilter(highCutChainSettings, audioProcessor.getSampleRate());
 
     updateLowCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, lowCutChainSettings.lowCutSlope);
-    updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);
+    updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);*/
 
     startTimerHz(60); // dodany timer dla dzialania responsee curve
 }
@@ -104,8 +106,19 @@ void ResponseCurveComponent::timerCallback()
     if (parametersChanged.compareAndSetBool(false, true))
     {
 
-        DBG("params changed");
+        
         //up mono
+        
+        updateChain();
+        //signal repaint
+       // repaint();
+    }
+
+    repaint();
+}
+
+void ResponseCurveComponent::updateChain()
+    {
         auto lowChainSettings = getChainSettings(audioProcessor.TreeState); //dodane response curve dla lowband
         auto lowBandCoefficients = makeLowBandFilter(lowChainSettings, audioProcessor.getSampleRate());
         updateCoefficients(monoChain.get<ChainPositions::LowBand>().coefficients, lowBandCoefficients);
@@ -125,13 +138,8 @@ void ResponseCurveComponent::timerCallback()
 
         updateLowCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, lowCutChainSettings.lowCutSlope);
         updateHighCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, highCutChainSettings.highCutSlope);
-
-        //signal repaint
-       // repaint();
     }
 
-    repaint();
-}
 
 void ResponseCurveComponent::paint(juce::Graphics& g)
 {
@@ -218,13 +226,13 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
     auto leftChannelFFTPath = leftPathProducer.getPath();
     leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
 
-    g.setColour(Colours::green); // spektrum dla lewego kanalu
+    g.setColour(Colours::yellow); // spektrum dla lewego kanalu
     g.strokePath(leftChannelFFTPath, PathStrokeType(2.f));
 
     auto rightChannelFFTPath = rightPathProducer.getPath();
     rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
 
-    g.setColour(Colours::blue); // spektrum dla prawego kanalu
+    g.setColour(Colours::yellow); // spektrum dla prawego kanalu
     g.strokePath(rightChannelFFTPath, PathStrokeType(2.f));
 
     g.setColour(Colours::black);
